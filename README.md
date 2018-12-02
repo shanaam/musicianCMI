@@ -3,8 +3,7 @@ Data and code from the Cognitive Motor Integration study w/ life-long musicians
 
 ## INSTRUCTIONS
   + Clone or download
-  + Create a directory named data in the directory containing musicianStats.R
-  + Place the 4 CSV data files in data
+  + Place the 4 CSV data files in the 'data' directory
   + Open and source musicianStats.R
 
 ### INCLUDES:
