@@ -14,3 +14,10 @@ Data and code from the Cognitive Motor Integration study w/ life-long musicians
 ### TO COME:
 
 * R or Python code for creating relevant plots 
+
+### Notes
+Categories        | Values
+------------------|------------------
+Musician Status   | 0 = No    1 = Yes
+Sex               | 2 = F     3 = M
+Diagnosis         | 4 = Ctrl  5 = Alz
