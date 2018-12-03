@@ -6,6 +6,7 @@
 # If you havent already, uncomment and run the following lines of code to install required packages
 #install.packages("tidyverse")
 #install.packages("doBy")
+#install.packages("eZ")
 
 # set the working directory to wherever this file is located
 this.dir <- dirname(parent.frame(2)$ofile)
@@ -55,6 +56,10 @@ summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE, conf.i
   return(datac)
 }
 
+roundANOVA <- function (ezOutput) {
+  format(round(ezOutput$ANOVA$p, 3), nsmall = 2)
+}
+
 #####
 ## Statistics
 
@@ -77,6 +82,21 @@ sdTimingScoreFBR <- sd(rawDataFBR[rawDataFBR$Musician == 1, ]$TimingScore)
 meanTimingScorePCandFBR <- mean(rawDataPCandFBR[rawDataPCandFBR$Musician == 1, ]$TimingScore)
 sdTimingScorePCandFBR <- sd(rawDataPCandFBR[rawDataPCandFBR$Musician == 1, ]$TimingScore)
 
+# Library
+library(ez)
+
+# Timing Score
+timingScoreAOV <- ezANOVA(data=allData, dv=TimingScore, wid=Participant_Nr, within=Condition, between=.(Musician), return_aov=TRUE, type=3)
+timingScoreAOV$ANOVA$p <- roundANOVA(timingScoreAOV)
+print("Timing Score ANOVA")
+print(timingScoreAOV$ANOVA)
+
+
+# Endpoint Error
+endpointErrorAOV <- ezANOVA(data=allData, dv=EndpointErrorScore, wid=Participant_Nr, within=Condition, between=.(Musician), return_aov=TRUE, type=3)
+endpointErrorAOV$ANOVA$p <- roundANOVA(endpointErrorAOV)
+print("Endpoint Error ANOVA")
+print(endpointErrorAOV$ANOVA)
 
 
 #####
@@ -123,10 +143,11 @@ p <- ggplot(allData, aes(x = Musician, y = TimingScore)) +
   labs(x = "Musician Status", y = "Timing Score")
 p
 
-
 # Endpoint Error Score distribution
 EndpointPlot <- ggplot(allData, aes(Condition, EndpointErrorScore)) +
   theme_bw() +
   geom_violin(aes(fill = factor(Musician )))
 # plot
 EndpointPlot
+
+# Repeat for peak velocity and reversal
