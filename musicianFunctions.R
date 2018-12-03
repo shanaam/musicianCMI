@@ -2,6 +2,11 @@
 ## MUSICIAN CMI EXPERIMENT ##
 #############################
 
+## BEFORE YOU  BEGIN
+# If you havent already, uncomment and run the following lines of code to install required packages
+#install.packages("tidyverse")
+#install.packages("doBy")
+
 # set the working directory to wherever this file is located
 this.dir <- dirname(parent.frame(2)$ofile)
 setwd(this.dir)
@@ -20,9 +25,44 @@ allData <- rbind(rawDataStandard, rawDataPC, rawDataFBR, rawDataPCandFBR)
 #####
 # General Functions
 
+# Function to get sd and ci (confidence intervals)
+summarySE <- function(data=NULL, measurevar, groupvars=NULL, na.rm=FALSE, conf.interval=.95) {
+  library(doBy)
+  
+  # New version of length which can handle NA's: if na.rm==T, don't count them
+  length2 <- function (x, na.rm=FALSE) {
+    if (na.rm) sum(!is.na(x))
+    else       length(x)
+  }
+  
+  # Collapse the data
+  formula <- as.formula(paste(measurevar, paste(groupvars, collapse=" + "), sep=" ~ "))
+  datac <- summaryBy(formula, data=data, FUN=c(length2,mean,sd), na.rm=na.rm)
+  
+  # Rename columns
+  names(datac)[ names(datac) == paste(measurevar, ".mean",    sep="") ] <- measurevar
+  names(datac)[ names(datac) == paste(measurevar, ".sd",      sep="") ] <- "sd"
+  names(datac)[ names(datac) == paste(measurevar, ".length2", sep="") ] <- "N"
+  
+  datac$se <- datac$sd / sqrt(datac$N)  # Calculate standard error of the mean
+  
+  # Confidence interval multiplier for standard error
+  # Calculate t-statistic for confidence interval: 
+  # e.g., if conf.interval is .95, use .975 (above/below), and use df=N-1
+  ciMult <- qt(conf.interval/2 + .5, datac$N-1)
+  datac$ci <- datac$se * ciMult
+  
+  return(datac)
+}
 
 #####
 ## Statistics
+
+# Set factors
+allData$Condition <- as.factor(allData$Condition)
+allData$Musician <- as.factor(allData$Musician)
+allData$Sex <- as.factor(allData$Sex)
+allData$Diagnosis <- as.factor(allData$Diagnosis)
 
 # Descriptive Statistics
 
@@ -42,19 +82,51 @@ sdTimingScorePCandFBR <- sd(rawDataPCandFBR[rawDataPCandFBR$Musician == 1, ]$Tim
 #####
 ## Plots
 # Library
-library(ggplot2)
+library(tidyverse)
 
 # Descriptive statistics
+pd <- position_dodge(0.1) # move them .05 to the left and right (use in situations where error bars overlap (e.g. geom_line(p)))
+
 
 # Timing Score
-timingScorePlot <- ggplot(allData, aes(Condition, TimingScore)) +
-  geom_violin(aes(fill = factor(Musician )))
-# plot
-timingScorePlot
+dataErrors <- summarySE(allData, measurevar="TimingScore", groupvars=c("Condition","Musician"))
+dataErrors
 
-# Endpoint Error Score
+ggplot(dataErrors, aes(x=Musician, y=TimingScore, colour=Musician)) + 
+  theme_bw() +
+  geom_errorbar(aes(ymin=TimingScore-ci, ymax=TimingScore+ci), width=.1) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ Condition, ncol = 4)
+
+# Repeat for Endpoint Error Score
+dataErrors <- summarySE(allData, measurevar="EndpointErrorScore", groupvars=c("Condition","Musician"))
+dataErrors
+
+pd <- position_dodge(0.1) # move them .05 to the left and right
+
+ggplot(dataErrors, aes(x=Musician, y=EndpointErrorScore, colour=Musician)) + 
+  theme_bw() +
+  geom_errorbar(aes(ymin=EndpointErrorScore-ci, ymax=EndpointErrorScore+ci), width=.1) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ Condition, ncol = 4)
+
+#####
+# Below: distributions
+
+# Timing Score distributions (might change this to be like endpoint error. i.e. not use facet_wrap)
+p <- ggplot(allData, aes(x = Musician, y = TimingScore)) +
+  theme_bw() +
+  facet_wrap(~ Condition, ncol = 4) +
+  geom_violin(aes(fill = Musician)) +
+  labs(x = "Musician Status", y = "Timing Score")
+p
+
+
+# Endpoint Error Score distribution
 EndpointPlot <- ggplot(allData, aes(Condition, EndpointErrorScore)) +
+  theme_bw() +
   geom_violin(aes(fill = factor(Musician )))
-
 # plot
 EndpointPlot
