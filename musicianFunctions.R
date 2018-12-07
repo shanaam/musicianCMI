@@ -3,10 +3,11 @@
 #############################
 
 ## BEFORE YOU  BEGIN
-# If you havent already, uncomment and run the following lines of code to install required packages
-#install.packages("tidyverse")
-#install.packages("doBy")
-#install.packages("eZ")
+# If you havent already, uncomment and run the following lines of code to install required packages (only do this one time)
+#install.packages("tidyverse") # for plotting / others
+#install.packages("doBy") # for summary statistics function
+#install.packages("eZ") # for ezANOVA
+#install.packages("lsmeans") # for posthocs
 
 # set the working directory to wherever this file is located
 this.dir <- dirname(parent.frame(2)$ofile)
@@ -21,7 +22,8 @@ rawDataFBR <- read.csv("data/FBReversal_BrDIMeansZScores.csv")
 rawDataFBR$Condition <- "FBReversal"
 rawDataPCandFBR <- read.csv("data/FBRandPC_BrDIMeansZScores.csv")
 rawDataPCandFBR$Condition <- "PCandFBR"
-allData <- rbind(rawDataStandard, rawDataPC, rawDataFBR, rawDataPCandFBR)
+#allData <- rbind(rawDataStandard, rawDataPC, rawDataFBR, rawDataPCandFBR)
+allData <- rbind(rawDataStandard, rawDataPCandFBR)
 
 #####
 # General Functions
@@ -60,6 +62,16 @@ roundANOVA <- function (ezOutput) {
   format(round(ezOutput$ANOVA$p, 3), nsmall = 2)
 }
 
+setFactors <- function(df) {
+  df$Participant_Nr <- as.factor(df$Participant_Nr)
+  df$Participant_ID <- as.factor(df$Participant_ID)
+  df$Condition <- as.factor(df$Condition)
+  df$Musician <- as.factor(df$Musician)
+  df$Sex <- as.factor(df$Sex)
+  df$Diagnosis <- as.factor(df$Diagnosis)
+  
+  return(df)
+}
 #####
 ## Statistics
 
@@ -85,19 +97,40 @@ sdTimingScorePCandFBR <- sd(rawDataPCandFBR[rawDataPCandFBR$Musician == 1, ]$Tim
 # Library
 library(ez)
 
+# test
+allData <- allData[allData$Participant_ID != "MUS_AZ", ]
+
+#set factor (categorical) variables as factors
+allData <- setFactors(allData)
+
 # Timing Score
-timingScoreAOV <- ezANOVA(data=allData, dv=TimingScore, wid=Participant_Nr, within=Condition, between=.(Musician), return_aov=TRUE, type=3)
-timingScoreAOV$ANOVA$p <- roundANOVA(timingScoreAOV)
+timingScoreAOV <- ezANOVA(data=allData, dv=TimingScore, wid=Participant_Nr, within=Condition, between=Musician, return_aov=TRUE, type=3)
+#timingScoreAOV$ANOVA$p <- roundANOVA(timingScoreAOV)
 print("Timing Score ANOVA")
 print(timingScoreAOV$ANOVA)
 
 
 # Endpoint Error
-endpointErrorAOV <- ezANOVA(data=allData, dv=EndpointErrorScore, wid=Participant_Nr, within=Condition, between=.(Musician), return_aov=TRUE, type=3)
-endpointErrorAOV$ANOVA$p <- roundANOVA(endpointErrorAOV)
+endpointErrorAOV <- ezANOVA(data=allData, dv=EndpointErrorScore, wid=Participant_Nr, within=Condition, between=Musician, return_aov=TRUE, type=3)
+#endpointErrorAOV$ANOVA$p <- roundANOVA(endpointErrorAOV)
 print("Endpoint Error ANOVA")
 print(endpointErrorAOV$ANOVA)
 
+
+# corrected path length
+CPLAOV <- ezANOVA(data=allData, dv=CPL, wid=Participant_Nr, within=Condition, between=Musician, return_aov=TRUE, type=3)
+#CPL$ANOVA$p <- roundANOVA(CPLAOV)
+print("Corrected Path Length ANOVA")
+print(CPLAOV$ANOVA)
+
+# direction reversal
+DirRevAOV <- ezANOVA(data=allData, dv=X..Dir.Rev, wid=Participant_Nr, within=Condition, between=Musician, return_aov=TRUE, type=3)
+#CPL$ANOVA$p <- roundANOVA(DirRevAOV)
+print("Direction Reversal ANOVA")
+print(DirRevAOV$ANOVA)
+
+model1 <- aov(EndpointErrorScore ~ Condition + Musician, allData)
+TukeyHSD(model1, "Condition")
 
 #####
 ## Plots
@@ -132,12 +165,40 @@ ggplot(dataErrors, aes(x=Musician, y=EndpointErrorScore, colour=Musician)) +
   geom_point() +
   facet_wrap(~ Condition, ncol = 4)
 
+# Repeat for CPL
+dataErrors <- summarySE(allData, measurevar="CPL", groupvars=c("Condition","Musician"))
+dataErrors
+
+pd <- position_dodge(0.1) # move them .05 to the left and right
+
+ggplot(dataErrors, aes(x=Musician, y=CPL, colour=Musician)) + 
+  theme_bw() +
+  geom_errorbar(aes(ymin=CPL-ci, ymax=CPL+ci), width=.1) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ Condition, ncol = 4)
+
+# Repeat for Direction Reversal
+dataErrors <- summarySE(allData, measurevar="X..Dir.Rev", groupvars=c("Condition","Musician"))
+dataErrors
+
+pd <- position_dodge(0.1) # move them .05 to the left and right
+
+ggplot(dataErrors, aes(x=Musician, y=X..Dir.Rev, colour=Musician)) + 
+  theme_bw() +
+  geom_errorbar(aes(ymin=X..Dir.Rev-ci, ymax=X..Dir.Rev+ci), width=.1) +
+  geom_line() +
+  geom_point() +
+  facet_wrap(~ Condition, ncol = 4)
+
+
+
 #####
 # Below: distributions
 
 # Timing Score distributions (might change this to be like endpoint error. i.e. not use facet_wrap)
 p <- ggplot(allData, aes(x = Musician, y = TimingScore)) +
-  theme_bw() +
+  theme_minimal() +
   facet_wrap(~ Condition, ncol = 4) +
   geom_violin(aes(fill = Musician)) +
   labs(x = "Musician Status", y = "Timing Score")
@@ -145,7 +206,7 @@ p
 
 # Endpoint Error Score distribution
 EndpointPlot <- ggplot(allData, aes(Condition, EndpointErrorScore)) +
-  theme_bw() +
+  theme_minimal() +
   geom_violin(aes(fill = factor(Musician )))
 # plot
 EndpointPlot
