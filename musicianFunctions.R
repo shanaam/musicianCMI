@@ -83,7 +83,7 @@ allData$Diagnosis <- as.factor(allData$Diagnosis)
 
 # Descriptive Statistics
 
-# Median and SD for each composite z-score per condition
+# Mean and SD for each composite z-score per condition
 # Standard condition
 meanTimingScoreStandard <- mean(rawDataStandard[rawDataStandard$Musician == 1, ]$TimingScore)
 sdTimingScoreStandard <- sd(rawDataStandard[rawDataStandard$Musician == 1, ]$TimingScore)
@@ -129,8 +129,28 @@ DirRevAOV <- ezANOVA(data=allData, dv=X..Dir.Rev, wid=Participant_Nr, within=Con
 print("Direction Reversal ANOVA")
 print(DirRevAOV$ANOVA)
 
-model1 <- aov(EndpointErrorScore ~ Condition + Musician, allData)
-TukeyHSD(model1, "Condition")
+
+# Multiple Linear Regression
+# Endpoint Error
+fit <- lm(EndpointErrorScore ~ Condition + Musician + Diagnosis, data=allData)
+summary(fit)
+coefficients(fit)
+confint(fit, level=0.95)
+
+# Corrected Path Length
+fit <- lm(CPL ~ Condition + Musician + Diagnosis, data=allData)
+summary(fit)
+coefficients(fit)
+confint(fit, level=0.95)
+
+
+
+# Endpoint Error, with only the PC+FR condition
+fit <- lm(EndpointErrorScore ~ Musician + Diagnosis, data=rawDataPCandFBR)
+summary(fit)
+coefficients(fit)
+confint(fit, level=0.95)
+
 
 #####
 ## Plots
@@ -146,7 +166,7 @@ dataErrors <- summarySE(allData, measurevar="TimingScore", groupvars=c("Conditio
 dataErrors
 
 ggplot(dataErrors, aes(x=Musician, y=TimingScore, colour=Musician)) + 
-  theme_bw() +
+  theme_minimal()+
   geom_errorbar(aes(ymin=TimingScore-ci, ymax=TimingScore+ci), width=.1) +
   geom_line() +
   geom_point() +
@@ -159,7 +179,7 @@ dataErrors
 pd <- position_dodge(0.1) # move them .05 to the left and right
 
 ggplot(dataErrors, aes(x=Musician, y=EndpointErrorScore, colour=Musician)) + 
-  theme_bw() +
+  theme_minimal()+
   geom_errorbar(aes(ymin=EndpointErrorScore-ci, ymax=EndpointErrorScore+ci), width=.1) +
   geom_line() +
   geom_point() +
@@ -172,7 +192,7 @@ dataErrors
 pd <- position_dodge(0.1) # move them .05 to the left and right
 
 ggplot(dataErrors, aes(x=Musician, y=CPL, colour=Musician)) + 
-  theme_bw() +
+  theme_minimal()+
   geom_errorbar(aes(ymin=CPL-ci, ymax=CPL+ci), width=.1) +
   geom_line() +
   geom_point() +
@@ -185,11 +205,12 @@ dataErrors
 pd <- position_dodge(0.1) # move them .05 to the left and right
 
 ggplot(dataErrors, aes(x=Musician, y=X..Dir.Rev, colour=Musician)) + 
-  theme_bw() +
+  theme_minimal()+
   geom_errorbar(aes(ymin=X..Dir.Rev-ci, ymax=X..Dir.Rev+ci), width=.1) +
   geom_line() +
   geom_point() +
-  facet_wrap(~ Condition, ncol = 4)
+  facet_wrap(~ Condition, ncol = 4) +
+  labs(y = "Direction Reversal %")
 
 
 
