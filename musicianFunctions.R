@@ -131,17 +131,67 @@ print(DirRevAOV$ANOVA)
 
 
 # Multiple Linear Regression
+# Timing Score
+fit <- lm(TimingScore ~ Condition + Musician_Years + Diagnosis, data=allData)
+print("Timing Score MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
+
+# Endpoint Error
+fit <- lm(EndpointErrorScore ~ Condition + Musician_Years + Diagnosis, data=allData)
+print("Endpoint Error MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
+
+# Corrected Path Length
+fit <- lm(CPL ~ Condition + Musician_Years + Diagnosis, data=allData)
+print("Corrected Path Length MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
+
+# Direction Reversal
+fit <- lm(X..Dir.Rev ~ Condition + Musician_Years + Diagnosis, data=allData)
+print("Direction Reversal MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
+
+
+
+
+# Multiple Linear Regression with Musician Status
+# Timing Score
+fit <- lm(TimingScore ~ Condition + Musician + Diagnosis, data=allData)
+print("Timing Score MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
+
 # Endpoint Error
 fit <- lm(EndpointErrorScore ~ Condition + Musician + Diagnosis, data=allData)
-summary(fit)
-coefficients(fit)
-confint(fit, level=0.95)
+print("Endpoint Error MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
 
 # Corrected Path Length
 fit <- lm(CPL ~ Condition + Musician + Diagnosis, data=allData)
-summary(fit)
-coefficients(fit)
-confint(fit, level=0.95)
+print("Corrected Path Length MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
+
+# Direction Reversal
+fit <- lm(X..Dir.Rev ~ Condition + Musician + Diagnosis, data=allData)
+print("Direction Reversal MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
+
+
 
 
 
