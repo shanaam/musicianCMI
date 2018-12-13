@@ -97,7 +97,7 @@ sdTimingScorePCandFBR <- sd(rawDataPCandFBR[rawDataPCandFBR$Musician == 1, ]$Tim
 # Library
 library(ez)
 
-# test
+# remove outlier
 allData <- allData[allData$Participant_ID != "MUS_AZ", ]
 
 #set factor (categorical) variables as factors
@@ -208,6 +208,14 @@ confint(fit, level=0.95)
 library(tidyverse)
 
 # Descriptive statistics
+descriptives <- summarySE(allData, measurevar="Age", groupvars=c("Condition","Musician"))
+descriptives
+descriptives <- summarySE(allData, measurevar="Musician_Years", groupvars=c("Condition","Musician"))
+descriptives
+
+mean(allData[allData$Condition == "standard" & allData$Musician == 0, ]$Musician_Years, na.rm = TRUE)
+sd(allData[allData$Condition == "standard" & allData$Musician == 0, ]$Musician_Years, na.rm = TRUE)
+
 pd <- position_dodge(0.1) # move them .05 to the left and right (use in situations where error bars overlap (e.g. geom_line(p)))
 
 
