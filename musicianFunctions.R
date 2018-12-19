@@ -8,6 +8,7 @@
 #install.packages("doBy") # for summary statistics function
 #install.packages("eZ") # for ezANOVA
 #install.packages("lsmeans") # for posthocs
+#install.packages("ggbeeswarm") # for plots
 
 # set the working directory to wherever this file is located
 this.dir <- dirname(parent.frame(2)$ofile)
@@ -80,6 +81,12 @@ allData$Condition <- as.factor(allData$Condition)
 allData$Musician <- as.factor(allData$Musician)
 allData$Sex <- as.factor(allData$Sex)
 allData$Diagnosis <- as.factor(allData$Diagnosis)
+
+# Set reference factors
+allData <- within(allData, Condition <- relevel(Condition, ref = "standard"))
+allData <- within(allData, Musician <- relevel(Musician, ref = "0"))
+allData <- within(allData, Diagnosis <- relevel(Diagnosis, ref = "4"))
+allData <- within(allData, Sex <- relevel(Sex, ref = "2"))
 
 # Descriptive Statistics
 
@@ -194,7 +201,40 @@ print(confint(fit, level=0.95))
 
 
 
+#####
+# Multiple Linear Regression ONLY on non-standard condition
+nonStandardData <- allData[allData$Condition == "PCandFBR", ]
 
+# Timing Score
+fit <- lm(TimingScore ~ Musician + Diagnosis, data=nonStandardData)
+print("Timing Score MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
+
+# Endpoint Error
+fit <- lm(EndpointErrorScore ~ Musician + Diagnosis, data=nonStandardData)
+print("Endpoint Error MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
+
+# Corrected Path Length
+fit <- lm(CPL ~ Musician + Diagnosis, data=nonStandardData)
+print("Corrected Path Length MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
+
+# Direction Reversal
+fit <- lm(X..Dir.Rev ~ Musician + Diagnosis, data=nonStandardData)
+print("Direction Reversal MLR")
+print(summary(fit))
+print(coefficients(fit))
+print(confint(fit, level=0.95))
+
+
+#####
 # Endpoint Error, with only the PC+FR condition
 fit <- lm(EndpointErrorScore ~ Musician + Diagnosis, data=rawDataPCandFBR)
 summary(fit)
@@ -202,10 +242,6 @@ coefficients(fit)
 confint(fit, level=0.95)
 
 
-#####
-## Plots
-# Library
-library(tidyverse)
 
 # Descriptive statistics
 descriptives <- summarySE(allData, measurevar="Age", groupvars=c("Condition","Musician"))
@@ -216,60 +252,89 @@ descriptives
 mean(allData[allData$Condition == "standard" & allData$Musician == 0, ]$Musician_Years, na.rm = TRUE)
 sd(allData[allData$Condition == "standard" & allData$Musician == 0, ]$Musician_Years, na.rm = TRUE)
 
-pd <- position_dodge(0.1) # move them .05 to the left and right (use in situations where error bars overlap (e.g. geom_line(p)))
 
+#####
+## Plots
+# Library
+library(tidyverse)
+library(ggbeeswarm)
 
-# Timing Score
-dataErrors <- summarySE(allData, measurevar="TimingScore", groupvars=c("Condition","Musician"))
-dataErrors
+PlotTiming <- function(){
+  
+  pd <- position_dodge(0.1) # move them .05 to the left and right (use in situations where error bars overlap (e.g. geom_line(p)))
 
-ggplot(dataErrors, aes(x=Musician, y=TimingScore, colour=Musician)) + 
-  theme_minimal()+
-  geom_errorbar(aes(ymin=TimingScore-ci, ymax=TimingScore+ci), width=.1) +
-  geom_line() +
-  geom_point() +
-  facet_wrap(~ Condition, ncol = 4)
+  # Timing Score
+  dataErrors <- summarySE(allData, measurevar="TimingScore", groupvars=c("Condition","Musician"))
+  dataErrors
+  
+  ggplot(dataErrors, aes(x=Musician, y=TimingScore, colour=Musician)) + 
+    theme_minimal()+
+    geom_errorbar(aes(ymin=TimingScore-ci, ymax=TimingScore+ci), width=.15, size = 2) +
+    geom_point(size = 4) +
+    geom_beeswarm(alpha = 0.2, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
+    facet_wrap(~ Condition, ncol = 4) +
+    labs(y = "Timing Score", x = NULL) +
+    theme(legend.position = "none") +
+    scale_x_discrete(breaks=c("0","1"),
+                     labels=c("Non-musicians", "Musicians"))
+}
 
-# Repeat for Endpoint Error Score
-dataErrors <- summarySE(allData, measurevar="EndpointErrorScore", groupvars=c("Condition","Musician"))
-dataErrors
+PlotEndpointError <- function(){
+  # Repeat for Endpoint Error Score
+  dataErrors <- summarySE(allData, measurevar="EndpointErrorScore", groupvars=c("Condition","Musician"))
+  dataErrors
+  
+  ggplot(dataErrors, aes(x=Musician, y=EndpointErrorScore, colour=Musician)) + 
+    theme_minimal()+
+    geom_errorbar(aes(ymin=EndpointErrorScore-ci, ymax=EndpointErrorScore+ci), width=.15, size = 2) +
+    geom_point(size = 4) +
+    geom_beeswarm(alpha = 0.2, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
+    facet_wrap(~ Condition, ncol = 4) +
+    labs(y = "Endpoint Error Score", x = NULL) +
+    theme(legend.position = "none") +
+    scale_x_discrete(breaks=c("0","1"),
+                     labels=c("Non-musicians", "Musicians"))
+}  
 
-pd <- position_dodge(0.1) # move them .05 to the left and right
+PlotCPL <- function(){
+  # Repeat for CPL
+  dataErrors <- summarySE(allData, measurevar="CPL", groupvars=c("Condition","Musician"))
+  dataErrors
+  
+  ggplot(dataErrors, aes(x=Musician, y=CPL, colour=Musician)) + 
+    theme_minimal()+
+    geom_errorbar(aes(ymin=CPL-ci, ymax=CPL+ci), width=.15, size = 2) +
+    geom_point(size = 4) +
+    geom_beeswarm(alpha = 0.2, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
+    facet_wrap(~ Condition, ncol = 4) +
+    labs(y = "Corrected Path Length", x = NULL) +
+    theme(legend.position = "none") +
+    scale_x_discrete(breaks=c("0","1"),
+                     labels=c("Non-musicians", "Musicians"))
+}
 
-ggplot(dataErrors, aes(x=Musician, y=EndpointErrorScore, colour=Musician)) + 
-  theme_minimal()+
-  geom_errorbar(aes(ymin=EndpointErrorScore-ci, ymax=EndpointErrorScore+ci), width=.1) +
-  geom_line() +
-  geom_point() +
-  facet_wrap(~ Condition, ncol = 4)
+PlotDirReversal <- function(){
+  # Repeat for Direction Reversal
+  dataErrors <- summarySE(allData, measurevar="X..Dir.Rev", groupvars=c("Condition","Musician"))
+  dataErrors
 
-# Repeat for CPL
-dataErrors <- summarySE(allData, measurevar="CPL", groupvars=c("Condition","Musician"))
-dataErrors
+  ggplot(dataErrors, aes(x=Musician, y=X..Dir.Rev, colour=Musician)) + 
+    theme_minimal()+
+    geom_errorbar(aes(ymin=X..Dir.Rev-ci, ymax=X..Dir.Rev+ci), width=.15, size = 2) +
+    geom_point(size = 4) +
+    geom_beeswarm(alpha = 0.2, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
+    facet_wrap(~ Condition, ncol = 4) +
+    labs(y = "Direction Reversal (%)", x = NULL) +
+    theme(legend.position = "none", text=element_text(size=11,  family="sans")) +
+    scale_x_discrete(breaks=c("0","1"),
+                     labels=c("Non-musicians", "Musicians"))
+}
 
-pd <- position_dodge(0.1) # move them .05 to the left and right
-
-ggplot(dataErrors, aes(x=Musician, y=CPL, colour=Musician)) + 
-  theme_minimal()+
-  geom_errorbar(aes(ymin=CPL-ci, ymax=CPL+ci), width=.1) +
-  geom_line() +
-  geom_point() +
-  facet_wrap(~ Condition, ncol = 4)
-
-# Repeat for Direction Reversal
-dataErrors <- summarySE(allData, measurevar="X..Dir.Rev", groupvars=c("Condition","Musician"))
-dataErrors
-
-pd <- position_dodge(0.1) # move them .05 to the left and right
-
-ggplot(dataErrors, aes(x=Musician, y=X..Dir.Rev, colour=Musician)) + 
-  theme_minimal()+
-  geom_errorbar(aes(ymin=X..Dir.Rev-ci, ymax=X..Dir.Rev+ci), width=.1) +
-  geom_line() +
-  geom_point() +
-  facet_wrap(~ Condition, ncol = 4) +
-  labs(y = "Direction Reversal %")
-
+# Plot the data
+PlotTiming()
+PlotEndpointError()
+PlotCPL()
+PlotDirReversal()
 
 
 #####
