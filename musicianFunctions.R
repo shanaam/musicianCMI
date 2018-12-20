@@ -6,7 +6,7 @@
 # If you havent already, uncomment and run the following lines of code to install required packages (only do this one time)
 #install.packages("tidyverse") # for plotting / others
 #install.packages("doBy") # for summary statistics function
-#install.packages("eZ") # for ezANOVA
+#install.packages("ez") # for ezANOVA
 #install.packages("lsmeans") # for posthocs
 #install.packages("ggbeeswarm") # for plots
 
@@ -259,6 +259,8 @@ sd(allData[allData$Condition == "standard" & allData$Musician == 0, ]$Musician_Y
 library(tidyverse)
 library(ggbeeswarm)
 
+errorBarSize = 1
+
 PlotTiming <- function(){
   
   pd <- position_dodge(0.1) # move them .05 to the left and right (use in situations where error bars overlap (e.g. geom_line(p)))
@@ -269,9 +271,9 @@ PlotTiming <- function(){
   
   ggplot(dataErrors, aes(x=Musician, y=TimingScore, colour=Musician)) + 
     theme_minimal()+
-    geom_errorbar(aes(ymin=TimingScore-ci, ymax=TimingScore+ci), width=.15, size = 2) +
-    geom_point(size = 4) +
-    geom_beeswarm(alpha = 0.2, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
+    geom_errorbar(aes(ymin=TimingScore-ci, ymax=TimingScore+ci), width=.15, size = errorBarSize) +
+    geom_point(size = errorBarSize*2) +
+    geom_beeswarm(alpha = 0.15, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
     facet_wrap(~ Condition, ncol = 4) +
     labs(y = "Timing Score", x = NULL) +
     theme(legend.position = "none") +
@@ -286,9 +288,9 @@ PlotEndpointError <- function(){
   
   ggplot(dataErrors, aes(x=Musician, y=EndpointErrorScore, colour=Musician)) + 
     theme_minimal()+
-    geom_errorbar(aes(ymin=EndpointErrorScore-ci, ymax=EndpointErrorScore+ci), width=.15, size = 2) +
-    geom_point(size = 4) +
-    geom_beeswarm(alpha = 0.2, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
+    geom_errorbar(aes(ymin=EndpointErrorScore-ci, ymax=EndpointErrorScore+ci), width=.15, size = errorBarSize) +
+    geom_point(size = errorBarSize*2) +
+    geom_beeswarm(alpha = 0.15, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
     facet_wrap(~ Condition, ncol = 4) +
     labs(y = "Endpoint Error Score", x = NULL) +
     theme(legend.position = "none") +
@@ -303,9 +305,9 @@ PlotCPL <- function(){
   
   ggplot(dataErrors, aes(x=Musician, y=CPL, colour=Musician)) + 
     theme_minimal()+
-    geom_errorbar(aes(ymin=CPL-ci, ymax=CPL+ci), width=.15, size = 2) +
-    geom_point(size = 4) +
-    geom_beeswarm(alpha = 0.2, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
+    geom_errorbar(aes(ymin=CPL-ci, ymax=CPL+ci), width=.15, size = errorBarSize) +
+    geom_point(size = errorBarSize*2) +
+    geom_beeswarm(alpha = 0.15, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
     facet_wrap(~ Condition, ncol = 4) +
     labs(y = "Corrected Path Length", x = NULL) +
     theme(legend.position = "none") +
@@ -320,9 +322,9 @@ PlotDirReversal <- function(){
 
   ggplot(dataErrors, aes(x=Musician, y=X..Dir.Rev, colour=Musician)) + 
     theme_minimal()+
-    geom_errorbar(aes(ymin=X..Dir.Rev-ci, ymax=X..Dir.Rev+ci), width=.15, size = 2) +
-    geom_point(size = 4) +
-    geom_beeswarm(alpha = 0.2, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
+    geom_errorbar(aes(ymin=X..Dir.Rev-ci, ymax=X..Dir.Rev+ci), width=.15, size = errorBarSize) +
+    geom_point(size = errorBarSize*2) +
+    geom_beeswarm(alpha = 0.15, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
     facet_wrap(~ Condition, ncol = 4) +
     labs(y = "Direction Reversal (%)", x = NULL) +
     theme(legend.position = "none", text=element_text(size=11,  family="sans")) +
