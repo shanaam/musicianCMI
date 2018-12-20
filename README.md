@@ -20,3 +20,5 @@ Categories        | Values
 Musician Status   | 0 = No    1 = Yes
 Sex               | 2 = F     3 = M
 Diagnosis         | 4 = Ctrl  5 = Alz
+
+Authors: Alica Rogojin, Shanaathanan Modchalingam, George Tomou
