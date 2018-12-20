@@ -120,10 +120,10 @@ print("Endpoint Error ANOVA")
 print(endpointErrorAOV$ANOVA)
 
 
-# corrected path length
+# corrective path length
 CPLAOV <- ezANOVA(data=allData, dv=CPL, wid=Participant_Nr, within=Condition, between=Musician, return_aov=TRUE, type=3)
 # CPL$ANOVA$p <- roundANOVA(CPLAOV)
-print("Corrected Path Length ANOVA")
+print("Corrective Path Length ANOVA")
 print(CPLAOV$ANOVA)
 
 # direction reversal
@@ -185,7 +185,7 @@ cat("\n", sprintf("Controls: %.3f (%.3f)", mean(nonStandardData[nonStandardData$
 cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 1, "X..Dir.Rev"]), sd(nonStandardData[nonStandardData$Musician == 1, "X..Dir.Rev"])))
 cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
-
+p.adjust(c(0.072, 0.894, 0.611, NaN, 0.934, 0.001, 0.002, 0.296), method = "bonferroni")
 
 # # Multiple Linear Regression with Musician Years
 # # Timing Score
@@ -202,9 +202,9 @@ cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$s
 # print(coefficients(fit))
 # print(confint(fit, level=0.95))
 # 
-# # Corrected Path Length
+# # Corrective Path Length
 # fit <- lm(CPL ~ Condition + Musician_Years + Diagnosis, data=allData)
-# print("Corrected Path Length MLR")
+# print("Corrective Path Length MLR")
 # print(summary(fit))
 # print(coefficients(fit))
 # print(confint(fit, level=0.95))
@@ -232,9 +232,9 @@ cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$s
 # print(coefficients(fit))
 # print(confint(fit, level=0.95))
 # 
-# # Corrected Path Length
+# # Corrective Path Length
 # fit <- lm(CPL ~ Condition + Musician + Diagnosis, data=allData)
-# print("Corrected Path Length MLR")
+# print("Corrective Path Length MLR")
 # print(summary(fit))
 # print(coefficients(fit))
 # print(confint(fit, level=0.95))
@@ -264,9 +264,9 @@ print(summary(fit))
 print(coefficients(fit))
 print(confint(fit, level=0.95))
 
-# Corrected Path Length
+# Corrective Path Length
 fit <- lm(CPL ~ Musician + Diagnosis, data=nonStandardData)
-print("Corrected Path Length MLR")
+print("Corrective Path Length MLR")
 print(summary(fit))
 print(coefficients(fit))
 print(confint(fit, level=0.95))
@@ -346,7 +346,7 @@ PlotCPL <- function(){
     geom_point(size = errorBarSize*2) +
     geom_beeswarm(alpha = 0.15, size = 2, groupOnX = TRUE, dodge.width = 1, data = allData, colour = "black") +
     facet_wrap(~ Condition, ncol = 4) +
-    labs(y = "Corrected Path Length", x = NULL) +
+    labs(y = "Corrective Path Length", x = NULL) +
     theme(legend.position = "none") +
     scale_x_discrete(breaks=c("0","1"),
                      labels=c("Non-musicians", "Musicians"))
