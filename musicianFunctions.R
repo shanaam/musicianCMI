@@ -3,12 +3,12 @@
 #############################
 
 ## BEFORE YOU  BEGIN
-# If you havent already, uncomment and run the following lines of code to install required packages (only do this one time)
-#install.packages("tidyverse") # for plotting / others
-#install.packages("doBy") # for summary statistics function
-#install.packages("ez") # for ezANOVA
-#install.packages("lsmeans") # for posthocs
-#install.packages("ggbeeswarm") # for plots
+# If you havent already, uncomment (Ctrl + Shift + C) and run the following lines of code to install required packages (only do this one time)
+# install.packages("tidyverse") # for plotting / others
+# install.packages("doBy") # for summary statistics function
+# install.packages("ez") # for ezANOVA
+# install.packages("lsmeans") # for posthocs
+# install.packages("ggbeeswarm") # for plots
 
 # set the working directory to wherever this file is located
 this.dir <- dirname(parent.frame(2)$ofile)
@@ -76,11 +76,11 @@ setFactors <- function(df) {
 #####
 ## Statistics
 
-# Set factors
-allData$Condition <- as.factor(allData$Condition)
-allData$Musician <- as.factor(allData$Musician)
-allData$Sex <- as.factor(allData$Sex)
-allData$Diagnosis <- as.factor(allData$Diagnosis)
+# remove outlier
+allData <- allData[allData$Participant_ID != "MUS_AZ", ]
+
+# set factor (categorical) variables as factors
+allData <- setFactors(allData)
 
 # Set reference factors
 allData <- within(allData, Condition <- relevel(Condition, ref = "standard"))
@@ -88,9 +88,11 @@ allData <- within(allData, Musician <- relevel(Musician, ref = "0"))
 allData <- within(allData, Diagnosis <- relevel(Diagnosis, ref = "4"))
 allData <- within(allData, Sex <- relevel(Sex, ref = "2"))
 
+nonStandardData <- allData[allData$Condition == "PCandFBR", ]
+standardData <- allData[allData$Condition == "standard", ]
 # Descriptive Statistics
 
-# Mean and SD for each composite z-score per condition
+# Mean and SD for each composite z-score per condition -- is this necessary?
 # Standard condition
 meanTimingScoreStandard <- mean(rawDataStandard[rawDataStandard$Musician == 1, ]$TimingScore)
 sdTimingScoreStandard <- sd(rawDataStandard[rawDataStandard$Musician == 1, ]$TimingScore)
@@ -104,12 +106,6 @@ sdTimingScorePCandFBR <- sd(rawDataPCandFBR[rawDataPCandFBR$Musician == 1, ]$Tim
 # Library
 library(ez)
 
-# remove outlier
-allData <- allData[allData$Participant_ID != "MUS_AZ", ]
-
-#set factor (categorical) variables as factors
-allData <- setFactors(allData)
-
 # Timing Score
 timingScoreAOV <- ezANOVA(data=allData, dv=TimingScore, wid=Participant_Nr, within=Condition, between=Musician, return_aov=TRUE, type=3)
 #timingScoreAOV$ANOVA$p <- roundANOVA(timingScoreAOV)
@@ -119,14 +115,14 @@ print(timingScoreAOV$ANOVA)
 
 # Endpoint Error
 endpointErrorAOV <- ezANOVA(data=allData, dv=EndpointErrorScore, wid=Participant_Nr, within=Condition, between=Musician, return_aov=TRUE, type=3)
-#endpointErrorAOV$ANOVA$p <- roundANOVA(endpointErrorAOV)
+# endpointErrorAOV$ANOVA$p <- roundANOVA(endpointErrorAOV)
 print("Endpoint Error ANOVA")
 print(endpointErrorAOV$ANOVA)
 
 
 # corrected path length
 CPLAOV <- ezANOVA(data=allData, dv=CPL, wid=Participant_Nr, within=Condition, between=Musician, return_aov=TRUE, type=3)
-#CPL$ANOVA$p <- roundANOVA(CPLAOV)
+# CPL$ANOVA$p <- roundANOVA(CPLAOV)
 print("Corrected Path Length ANOVA")
 print(CPLAOV$ANOVA)
 
@@ -136,74 +132,123 @@ DirRevAOV <- ezANOVA(data=allData, dv=X..Dir.Rev, wid=Participant_Nr, within=Con
 print("Direction Reversal ANOVA")
 print(DirRevAOV$ANOVA)
 
+# T-tests to test group differences in standard and non-stndard conditions seperately
+# Standard
+comparison <- t.test( standardData[standardData$Musician == 0, "TimingScore"], standardData[standardData$Musician == 1, "TimingScore"])
+cat("\nT-tests for timing scores in standard condition")
+cat("\n", sprintf("Controls: %.3f (%.3f)", mean(standardData[standardData$Musician == 0, "TimingScore"]), sd(standardData[standardData$Musician == 0, "TimingScore"])))
+cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(standardData[standardData$Musician == 1, "TimingScore"]), sd(standardData[standardData$Musician == 1, "TimingScore"])))
+cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
-# Multiple Linear Regression
-# Timing Score
-fit <- lm(TimingScore ~ Condition + Musician_Years + Diagnosis, data=allData)
-print("Timing Score MLR")
-print(summary(fit))
-print(coefficients(fit))
-print(confint(fit, level=0.95))
+comparison <-t.test( standardData[standardData$Musician == 0, "EndpointErrorScore"], standardData[standardData$Musician == 1, "EndpointErrorScore"])
+cat("\nT-tests for endpoint error scores in standard condition")
+cat("\n", sprintf("Controls: %.3f (%.3f)", mean(standardData[standardData$Musician == 0, "EndpointErrorScore"]), sd(standardData[standardData$Musician == 0, "EndpointErrorScore"])))
+cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(standardData[standardData$Musician == 1, "EndpointErrorScore"]), sd(standardData[standardData$Musician == 1, "EndpointErrorScore"])))
+cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
-# Endpoint Error
-fit <- lm(EndpointErrorScore ~ Condition + Musician_Years + Diagnosis, data=allData)
-print("Endpoint Error MLR")
-print(summary(fit))
-print(coefficients(fit))
-print(confint(fit, level=0.95))
+comparison <-t.test( standardData[standardData$Musician == 0, "CPL"], standardData[standardData$Musician == 1, "CPL"])
+cat("\nT-tests for corrective path length scores in standard condition")
+cat("\n", sprintf("Controls: %.3f (%.3f)", mean(standardData[standardData$Musician == 0, "CPL"]), sd(standardData[standardData$Musician == 0, "CPL"])))
+cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(standardData[standardData$Musician == 1, "CPL"]), sd(standardData[standardData$Musician == 1, "CPL"])))
+cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
-# Corrected Path Length
-fit <- lm(CPL ~ Condition + Musician_Years + Diagnosis, data=allData)
-print("Corrected Path Length MLR")
-print(summary(fit))
-print(coefficients(fit))
-print(confint(fit, level=0.95))
+comparison <-t.test( standardData[standardData$Musician == 0, "X..Dir.Rev"], standardData[standardData$Musician == 1, "X..Dir.Rev"])
+cat("\nT-tests for direction reversals (%) length scores in standard condition")
+cat("\n", sprintf("Controls: %.3f (%.3f)", mean(standardData[standardData$Musician == 0, "X..Dir.Rev"]), sd(standardData[standardData$Musician == 0, "X..Dir.Rev"])))
+cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(standardData[standardData$Musician == 1, "X..Dir.Rev"]), sd(standardData[standardData$Musician == 1, "X..Dir.Rev"])))
+cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
-# Direction Reversal
-fit <- lm(X..Dir.Rev ~ Condition + Musician_Years + Diagnosis, data=allData)
-print("Direction Reversal MLR")
-print(summary(fit))
-print(coefficients(fit))
-print(confint(fit, level=0.95))
+# report: mean, sd (for each group), t(df)= , p = 
 
+# Non-standard
+comparison <- t.test( nonStandardData[nonStandardData$Musician == 0, "TimingScore"], nonStandardData[nonStandardData$Musician == 1, "TimingScore"])
+cat("\nT-tests for timing scores in nonStandard condition")
+cat("\n", sprintf("Controls: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 0, "TimingScore"]), sd(nonStandardData[nonStandardData$Musician == 0, "TimingScore"])))
+cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 1, "TimingScore"]), sd(nonStandardData[nonStandardData$Musician == 1, "TimingScore"])))
+cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
+comparison <-t.test( nonStandardData[nonStandardData$Musician == 0, "EndpointErrorScore"], nonStandardData[nonStandardData$Musician == 1, "EndpointErrorScore"])
+cat("\nT-tests for endpoint error scores in nonStandard condition")
+cat("\n", sprintf("Controls: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 0, "EndpointErrorScore"]), sd(nonStandardData[nonStandardData$Musician == 0, "EndpointErrorScore"])))
+cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 1, "EndpointErrorScore"]), sd(nonStandardData[nonStandardData$Musician == 1, "EndpointErrorScore"])))
+cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
+comparison <-t.test( nonStandardData[nonStandardData$Musician == 0, "CPL"], nonStandardData[nonStandardData$Musician == 1, "CPL"])
+cat("\nT-tests for corrective path length scores in nonStandard condition")
+cat("\n", sprintf("Controls: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 0, "CPL"]), sd(nonStandardData[nonStandardData$Musician == 0, "CPL"])))
+cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 1, "CPL"]), sd(nonStandardData[nonStandardData$Musician == 1, "CPL"])))
+cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
-# Multiple Linear Regression with Musician Status
-# Timing Score
-fit <- lm(TimingScore ~ Condition + Musician + Diagnosis, data=allData)
-print("Timing Score MLR")
-print(summary(fit))
-print(coefficients(fit))
-print(confint(fit, level=0.95))
-
-# Endpoint Error
-fit <- lm(EndpointErrorScore ~ Condition + Musician + Diagnosis, data=allData)
-print("Endpoint Error MLR")
-print(summary(fit))
-print(coefficients(fit))
-print(confint(fit, level=0.95))
-
-# Corrected Path Length
-fit <- lm(CPL ~ Condition + Musician + Diagnosis, data=allData)
-print("Corrected Path Length MLR")
-print(summary(fit))
-print(coefficients(fit))
-print(confint(fit, level=0.95))
-
-# Direction Reversal
-fit <- lm(X..Dir.Rev ~ Condition + Musician + Diagnosis, data=allData)
-print("Direction Reversal MLR")
-print(summary(fit))
-print(coefficients(fit))
-print(confint(fit, level=0.95))
+comparison <-t.test( nonStandardData[nonStandardData$Musician == 0, "X..Dir.Rev"], nonStandardData[nonStandardData$Musician == 1, "X..Dir.Rev"])
+cat("\nT-tests for direction reversals (%) length scores in nonStandard condition")
+cat("\n", sprintf("Controls: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 0, "X..Dir.Rev"]), sd(nonStandardData[nonStandardData$Musician == 0, "X..Dir.Rev"])))
+cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 1, "X..Dir.Rev"]), sd(nonStandardData[nonStandardData$Musician == 1, "X..Dir.Rev"])))
+cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
 
+
+# # Multiple Linear Regression with Musician Years
+# # Timing Score
+# fit <- lm(TimingScore ~ Condition + Musician_Years + Diagnosis, data=allData)
+# print("Timing Score MLR")
+# print(summary(fit))
+# print(coefficients(fit))
+# print(confint(fit, level=0.95))
+# 
+# # Endpoint Error
+# fit <- lm(EndpointErrorScore ~ Condition + Musician_Years + Diagnosis, data=allData)
+# print("Endpoint Error MLR")
+# print(summary(fit))
+# print(coefficients(fit))
+# print(confint(fit, level=0.95))
+# 
+# # Corrected Path Length
+# fit <- lm(CPL ~ Condition + Musician_Years + Diagnosis, data=allData)
+# print("Corrected Path Length MLR")
+# print(summary(fit))
+# print(coefficients(fit))
+# print(confint(fit, level=0.95))
+# 
+# # Direction Reversal
+# fit <- lm(X..Dir.Rev ~ Condition + Musician_Years + Diagnosis, data=allData)
+# print("Direction Reversal MLR")
+# print(summary(fit))
+# print(coefficients(fit))
+# print(confint(fit, level=0.95))
+
+
+# # Multiple Linear Regression with Musician Status
+# # Timing Score
+# fit <- lm(TimingScore ~ Condition + Musician + Diagnosis, data=allData)
+# print("Timing Score MLR")
+# print(summary(fit))
+# print(coefficients(fit))
+# print(confint(fit, level=0.95))
+# 
+# # Endpoint Error
+# fit <- lm(EndpointErrorScore ~ Condition + Musician + Diagnosis, data=allData)
+# print("Endpoint Error MLR")
+# print(summary(fit))
+# print(coefficients(fit))
+# print(confint(fit, level=0.95))
+# 
+# # Corrected Path Length
+# fit <- lm(CPL ~ Condition + Musician + Diagnosis, data=allData)
+# print("Corrected Path Length MLR")
+# print(summary(fit))
+# print(coefficients(fit))
+# print(confint(fit, level=0.95))
+# 
+# # Direction Reversal
+# fit <- lm(X..Dir.Rev ~ Condition + Musician + Diagnosis, data=allData)
+# print("Direction Reversal MLR")
+# print(summary(fit))
+# print(coefficients(fit))
+# print(confint(fit, level=0.95))
 
 
 #####
 # Multiple Linear Regression ONLY on non-standard condition
-nonStandardData <- allData[allData$Condition == "PCandFBR", ]
 
 # Timing Score
 fit <- lm(TimingScore ~ Musician + Diagnosis, data=nonStandardData)
@@ -235,14 +280,6 @@ print(confint(fit, level=0.95))
 
 
 #####
-# Endpoint Error, with only the PC+FR condition
-fit <- lm(EndpointErrorScore ~ Musician + Diagnosis, data=rawDataPCandFBR)
-summary(fit)
-coefficients(fit)
-confint(fit, level=0.95)
-
-
-
 # Descriptive statistics
 descriptives <- summarySE(allData, measurevar="Age", groupvars=c("Condition","Musician"))
 descriptives
@@ -343,18 +380,15 @@ PlotDirReversal()
 # Below: distributions
 
 # Timing Score distributions (might change this to be like endpoint error. i.e. not use facet_wrap)
-p <- ggplot(allData, aes(x = Musician, y = TimingScore)) +
+ggplot(allData, aes(x = Musician, y = TimingScore)) +
   theme_minimal() +
   facet_wrap(~ Condition, ncol = 4) +
   geom_violin(aes(fill = Musician)) +
   labs(x = "Musician Status", y = "Timing Score")
-p
 
 # Endpoint Error Score distribution
-EndpointPlot <- ggplot(allData, aes(Condition, EndpointErrorScore)) +
+ggplot(allData, aes(Condition, EndpointErrorScore)) +
   theme_minimal() +
   geom_violin(aes(fill = factor(Musician )))
-# plot
-EndpointPlot
 
 # Repeat for peak velocity and reversal
