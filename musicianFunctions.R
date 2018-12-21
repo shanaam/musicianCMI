@@ -153,7 +153,7 @@ cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(standardData[standardData$Music
 cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
 comparison <-t.test( standardData[standardData$Musician == 0, "X..Dir.Rev"], standardData[standardData$Musician == 1, "X..Dir.Rev"])
-cat("\nT-tests for direction reversals (%) length scores in standard condition")
+cat("\nT-tests for direction reversals (%) in standard condition")
 cat("\n", sprintf("Controls: %.3f (%.3f)", mean(standardData[standardData$Musician == 0, "X..Dir.Rev"]), sd(standardData[standardData$Musician == 0, "X..Dir.Rev"])))
 cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(standardData[standardData$Musician == 1, "X..Dir.Rev"]), sd(standardData[standardData$Musician == 1, "X..Dir.Rev"])))
 cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
@@ -180,12 +180,24 @@ cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(nonStandardData[nonStandardData
 cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
 comparison <-t.test( nonStandardData[nonStandardData$Musician == 0, "X..Dir.Rev"], nonStandardData[nonStandardData$Musician == 1, "X..Dir.Rev"])
-cat("\nT-tests for direction reversals (%) length scores in nonStandard condition")
+cat("\nT-tests for direction reversals (%) in nonStandard condition")
 cat("\n", sprintf("Controls: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 0, "X..Dir.Rev"]), sd(nonStandardData[nonStandardData$Musician == 0, "X..Dir.Rev"])))
 cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 1, "X..Dir.Rev"]), sd(nonStandardData[nonStandardData$Musician == 1, "X..Dir.Rev"])))
 cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
 p.adjust(c(0.072, 0.894, 0.611, NaN, 0.934, 0.001, 0.002, 0.296), method = "bonferroni")
+
+comparison <-t.test( nonStandardData[nonStandardData$Musician == 0, "Age"], nonStandardData[nonStandardData$Musician == 1, "Age"])
+cat("\nT-tests for age")
+cat("\n", sprintf("Controls: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 0, "Age"]), sd(nonStandardData[nonStandardData$Musician == 0, "Age"])))
+cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 1, "Age"]), sd(nonStandardData[nonStandardData$Musician == 1, "Age"])))
+cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
+
+comparison <-t.test( nonStandardData[nonStandardData$Musician == 0, "Musician_Years"], nonStandardData[nonStandardData$Musician == 1, "Musician_Years"])
+cat("\nT-tests for musician years")
+cat("\n", sprintf("Controls: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 0, "Musician_Years"]), sd(nonStandardData[nonStandardData$Musician == 0, "Musician_Years"])))
+cat("\n", sprintf("Musicians: %.3f (%.3f)", mean(nonStandardData[nonStandardData$Musician == 1, "Musician_Years"]), sd(nonStandardData[nonStandardData$Musician == 1, "Musician_Years"])))
+cat("\n", sprintf("t(%.0f) = %.3f, p = %.3f", comparison$parameter, comparison$statistic, comparison$p.value), "\n\n")
 
 # # Multiple Linear Regression with Musician Years
 # # Timing Score
@@ -315,7 +327,7 @@ PlotTiming <- function(){
     labs(y = "Timing Score", x = NULL) +
     theme(legend.position = "none") +
     scale_x_discrete(breaks=c("0","1"),
-                     labels=c("Non-musicians", "Musicians"))
+                     labels= NULL)
 }
 
 PlotEndpointError <- function(){
@@ -332,7 +344,7 @@ PlotEndpointError <- function(){
     labs(y = "Endpoint Error Score", x = NULL) +
     theme(legend.position = "none") +
     scale_x_discrete(breaks=c("0","1"),
-                     labels=c("Non-musicians", "Musicians"))
+                     labels= NULL)
 }  
 
 PlotCPL <- function(){
@@ -349,7 +361,7 @@ PlotCPL <- function(){
     labs(y = "Corrective Path Length", x = NULL) +
     theme(legend.position = "none") +
     scale_x_discrete(breaks=c("0","1"),
-                     labels=c("Non-musicians", "Musicians"))
+                     labels= NULL)
 }
 
 PlotDirReversal <- function(){
@@ -366,7 +378,7 @@ PlotDirReversal <- function(){
     labs(y = "Direction Reversal (%)", x = NULL) +
     theme(legend.position = "none", text=element_text(size=11,  family="sans")) +
     scale_x_discrete(breaks=c("0","1"),
-                     labels=c("Non-musicians", "Musicians"))
+                     labels= NULL)
 }
 
 # Plot the data
